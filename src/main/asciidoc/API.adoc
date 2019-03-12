@@ -1,0 +1,29 @@
+= Spring Test Demo
+
+== API
+
+=== create new pet
+
+请求命令：
+include::{snippets}/addPet/curl-request.adoc[]
+
+请求：
+include::{snippets}/addPet/http-request.adoc[]
+
+请求内容：
+include::{snippets}/addPet/request-body.adoc[]
+
+请求参数：
+include::{snippets}/addPet/request-fields.adoc[]
+
+响应：
+include::{snippets}/addPet/http-response.adoc[]
+
+响应：[.line-through]####
+include::{snippets}/addPet/response-body.adoc[]
+
+=== get pet by id
+
+=== delete pet by id
+
+=== update pet
