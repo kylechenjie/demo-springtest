@@ -1,6 +1,7 @@
 package com.pass0word1.demo.springtest;
 
 import com.google.gson.Gson;
+import com.jayway.jsonpath.JsonPath;
 import com.pass0word1.demo.springtest.domain.Pet;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,6 +42,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.*;
 @WebAppConfiguration
 @SpringBootTest
 @Rollback()
+@Transactional
 public class SpringtestPetControllerTests {
   final static Logger logger= LoggerFactory.getLogger(SpringtestPetControllerTests.class);
 
@@ -77,7 +79,6 @@ public class SpringtestPetControllerTests {
   }
 
   @Test
-  @Transactional
   public void testCreatePet() throws Exception {
     int beforeRowCount = JdbcTestUtils.countRowsInTable(jdbcTemplate, "PET");
     Assert.assertEquals(0, beforeRowCount);
@@ -95,8 +96,12 @@ public class SpringtestPetControllerTests {
 
   @Test
   public void testGetPetById() throws Exception {
-
-    testCreatePet();
+    Assert.assertEquals(0,JdbcTestUtils.countRowsInTable(jdbcTemplate,"pet"));
+    Pet pet = new Pet();
+    pet.setName("cat");
+    pet.setStatus("available");
+    mockMvc.perform(post("/pet").contentType(MediaType.APPLICATION_JSON_UTF8).content(gson.toJson(pet))).andExpect(status().isCreated());
+    Assert.assertEquals(1,JdbcTestUtils.countRowsInTable(jdbcTemplate,"pet"));
     mockMvc.perform(
         get("/pet/{id}", 1)
             .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -129,8 +134,16 @@ public class SpringtestPetControllerTests {
 
   @Test
   public void testDeletePetById() throws Exception {
-    mockMvc.perform(delete("/pet/{id}", 1).accept(MediaType.APPLICATION_JSON_UTF8))
-        .andDo(print())
+    Assert.assertEquals(0,JdbcTestUtils.countRowsInTable(jdbcTemplate,"PET"));
+    Pet pet = new Pet();
+    pet.setName("cat");
+    pet.setStatus("available");
+    String body=mockMvc.perform(post("/pet").contentType(MediaType.APPLICATION_JSON_UTF8).content(gson.toJson(pet))).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    Integer id=JsonPath.parse(body).read("$.id");
+    Assert.assertNotNull(id);
+    Assert.assertEquals(1,JdbcTestUtils.countRowsInTable(jdbcTemplate,"pet"));
+    mockMvc.perform(delete("/pet/{id}", id).accept(MediaType.APPLICATION_JSON_UTF8))
         .andExpect(status().isNoContent());
+    Assert.assertEquals(0,JdbcTestUtils.countRowsInTable(jdbcTemplate,"PET"));
   }
 }
